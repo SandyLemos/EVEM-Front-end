@@ -142,7 +142,7 @@ export default function EventsPage() {
 
   // Função para navegar para detalhes
   const goToDetails = (id: number) => {
-    router.push(`/eventdetails/${id}`)
+    router.push(`/events/${id}`)
   }
 
   const defaultColor = "bg-gray-200 text-gray-700"

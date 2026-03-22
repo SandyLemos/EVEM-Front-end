@@ -3,7 +3,7 @@
 import React, { useEffect } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { Navbar } from "../evem-projeto/components/Navbar"
+import { Navbar } from "../../evem-projeto/components/Navbar"
 import {
   Calendar,
   MapPin,
