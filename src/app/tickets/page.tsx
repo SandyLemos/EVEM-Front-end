@@ -1,10 +1,10 @@
 "use client"
 
-import React, { useState, useEffect } from "react" // Adicionado useEffect
+import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { Navbar } from "../evem-projeto/components/Navbar"
 import {
-  Ticket,
+  Ticket as TicketIcon, // Renomeado para não conflitar com a Interface
   Search,
   MapPin,
   Calendar,
@@ -17,12 +17,24 @@ import {
   Utensils,
   BookOpen,
   Baby,
-  Clock, // Adicionado ícone para pendentes
+  Clock,
 } from "lucide-react"
 
+// 1. Definindo a Interface para acabar com o erro de "any"
+interface TicketData {
+  id: string | number
+  status: "active" | "pending" | "cancelled" | "finished"
+  title: string
+  imageSrc?: string
+  img?: string
+  categoryLabel?: string
+  category?: string
+  description?: string
+  location: string
+  date: string
+  type?: string
+}
 
-
-// Mock Data original mantido como fallback (opcional) ou você pode remover
 const categories = [
   { icon: Music, label: "Shows e Festas", slug: "shows" },
   { icon: MonitorPlay, label: "Cursos e Workshops", slug: "cursos" },
@@ -37,19 +49,24 @@ const categories = [
 
 export default function TicketsPage() {
   const [activeTab, setActiveTab] = useState("Ativos")
-  const [allTickets, setAllTickets] = useState<any[]>([]) // Estado para os ingressos automatizados
 
-  const tabs = ["Ativos", "Pendentes", "Cancelados", "Encerrados"]
+  // 2. Inicialização segura para o Next.js (Evita cascading renders)
+  const [allTickets, setAllTickets] = useState<TicketData[]>([])
 
-  // --- LÓGICA DE AUTOMAÇÃO ---
   useEffect(() => {
+    // Só acessamos o localStorage dentro do useEffect para garantir que estamos no cliente
     const saved = localStorage.getItem("@evem:tickets")
     if (saved) {
-      setAllTickets(JSON.parse(saved))
+      try {
+        setAllTickets(JSON.parse(saved))
+      } catch (error) {
+        console.error("Erro ao carregar tickets:", error)
+      }
     }
   }, [])
 
-  // Filtragem baseada no status do localStorage e na aba ativa
+  const tabs = ["Ativos", "Pendentes", "Cancelados", "Encerrados"]
+
   const filteredTickets = allTickets.filter((ticket) => {
     if (activeTab === "Ativos") return ticket.status === "active"
     if (activeTab === "Pendentes") return ticket.status === "pending"
@@ -63,15 +80,13 @@ export default function TicketsPage() {
       <Navbar />
 
       <main className="w-[95%] max-w-[1200px] mt-8">
-        {/* Título da Página */}
         <div className="flex items-center gap-3 mb-8">
-          <Ticket className="text-[#0085D7] w-8 h-8 -rotate-45" />
+          <TicketIcon className="text-[#0085D7] w-8 h-8 -rotate-45" />
           <h1 className="text-3xl font-bold text-black font-serif">
             Ingressos
           </h1>
         </div>
 
-        {/* Barra de Controles: Abas e Busca */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
           <div className="flex gap-3 overflow-x-auto pb-2 w-full md:w-auto scrollbar-hide">
             {tabs.map((tab) => (
@@ -99,7 +114,6 @@ export default function TicketsPage() {
           </div>
         </div>
 
-        {/* --- CONTEÚDO PRINCIPAL (LÓGICA AUTOMATIZADA) --- */}
         <div className="min-h-[300px]">
           {filteredTickets.length > 0 ? (
             <div className="flex flex-col gap-6">
@@ -108,19 +122,21 @@ export default function TicketsPage() {
                   key={ticket.id}
                   className="bg-white rounded-3xl p-4 flex flex-col md:flex-row gap-6 items-center shadow-sm border-2 border-transparent hover:border-[#0085D7] hover:shadow-md transition-all duration-300"
                 >
-                  {/* Imagem */}
                   <div className="w-full md:w-[200px] h-[140px] flex-shrink-0 rounded-2xl overflow-hidden relative">
                     <img
-                      src={ticket.imageSrc || ticket.img} // Suporta imageSrc ou img conforme o objeto salvo
+                      src={
+                        ticket.imageSrc ||
+                        ticket.img ||
+                        "/placeholder-event.png"
+                      }
                       alt={ticket.title}
                       className="w-full h-full object-cover"
                     />
                   </div>
 
-                  {/* Informações */}
                   <div className="flex-grow text-center md:text-left w-full">
                     <span className="inline-block px-3 py-1 rounded-full text-[10px] font-bold mb-2 bg-[#F3E5F5] text-[#7B1FA2]">
-                      {ticket.categoryLabel || ticket.category}
+                      {ticket.categoryLabel || ticket.category || "Evento"}
                     </span>
                     <h3 className="text-lg font-extrabold text-gray-900 mb-1">
                       {ticket.title}
@@ -141,11 +157,10 @@ export default function TicketsPage() {
                     </div>
                   </div>
 
-                  {/* Ação / Status Dinâmico */}
                   <div className="w-full md:w-auto flex-shrink-0 flex flex-col items-center md:items-end gap-3 px-4">
                     <div className="bg-[#F3F0FA] px-4 py-2 rounded-lg flex items-center gap-2">
                       {ticket.status === "active" ? (
-                        <Ticket className="w-4 h-4 text-[#7b2cbf]" />
+                        <TicketIcon className="w-4 h-4 text-[#7b2cbf]" />
                       ) : (
                         <Clock className="w-4 h-4 text-yellow-600" />
                       )}
@@ -154,7 +169,11 @@ export default function TicketsPage() {
                           {ticket.type || "Entrada Geral"}
                         </span>
                         <span
-                          className={`block text-[10px] font-bold uppercase ${ticket.status === "active" ? "text-green-600" : "text-yellow-600"}`}
+                          className={`block text-[10px] font-bold uppercase ${
+                            ticket.status === "active"
+                              ? "text-green-600"
+                              : "text-yellow-600"
+                          }`}
                         >
                           {ticket.status === "active"
                             ? "Confirmado"
@@ -187,7 +206,7 @@ export default function TicketsPage() {
           )}
         </div>
 
-        {/* Rodapé de Categorias (Mantido Exatamente Igual) */}
+        {/* Rodapé de Categorias */}
         <section className="mt-16 mb-10">
           <h2 className="text-2xl font-bold text-[#eebb58] mb-8 border-b-2 border-[#eebb58] inline-block pb-1 font-serif">
             Navegue por Categorias
