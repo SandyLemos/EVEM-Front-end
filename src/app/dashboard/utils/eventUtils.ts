@@ -76,10 +76,15 @@ export const filterEvents = (
     // Search filter
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase()
+      const title = (event.title || "").toLowerCase()
+      const description = (event.description || "").toLowerCase()
+      const locationStr = String(event.location || "").toLowerCase()
+
       const matchesSearch =
-        event.title.toLowerCase().includes(searchTerm) ||
-        event.description.toLowerCase().includes(searchTerm) ||
-        event.location.toLowerCase().includes(searchTerm)
+        title.includes(searchTerm) ||
+        description.includes(searchTerm) ||
+        locationStr.includes(searchTerm)
+
       if (!matchesSearch) return false
     }
 
@@ -103,44 +108,36 @@ export const filterEvents = (
       today.setHours(0, 0, 0, 0)
 
       switch (filters.dateRange) {
-        case "today":
+        // Adicionadas chaves { } nos cases que declaram constantes
+        case "today": {
           const todayEnd = new Date(today)
           todayEnd.setDate(today.getDate() + 1)
           if (eventDate < today || eventDate >= todayEnd) return false
           break
+        }
 
-        case "this-week":
+        case "this-week": {
           const weekStart = new Date(today)
           weekStart.setDate(today.getDate() - today.getDay())
           const weekEnd = new Date(weekStart)
           weekEnd.setDate(weekStart.getDate() + 7)
           if (eventDate < weekStart || eventDate >= weekEnd) return false
           break
+        }
 
-        case "this-month":
+        case "this-month": {
           const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
-          const monthEnd = new Date(
-            today.getFullYear(),
-            today.getMonth() + 1,
-            1
-          )
+          const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 1)
           if (eventDate < monthStart || eventDate >= monthEnd) return false
           break
+        }
 
-        case "next-month":
-          const nextMonthStart = new Date(
-            today.getFullYear(),
-            today.getMonth() + 1,
-            1
-          )
-          const nextMonthEnd = new Date(
-            today.getFullYear(),
-            today.getMonth() + 2,
-            1
-          )
-          if (eventDate < nextMonthStart || eventDate >= nextMonthEnd)
-            return false
+        case "next-month": {
+          const nextMonthStart = new Date(today.getFullYear(), today.getMonth() + 1, 1)
+          const nextMonthEnd = new Date(today.getFullYear(), today.getMonth() + 2, 1)
+          if (eventDate < nextMonthStart || eventDate >= nextMonthEnd) return false
           break
+        }
       }
     }
 
@@ -160,7 +157,8 @@ export const sortEvents = (
       case "created":
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       case "date":
-      default:
+      default: {
+        // Adicionadas chaves aqui também
         const nextDateA = getNextEventDate(a)
         const nextDateB = getNextEventDate(b)
 
@@ -171,6 +169,7 @@ export const sortEvents = (
         const dateA = new Date(`${nextDateA.date}T${nextDateA.startTime}`)
         const dateB = new Date(`${nextDateB.date}T${nextDateB.startTime}`)
         return dateA.getTime() - dateB.getTime()
+      }
     }
   })
 }
