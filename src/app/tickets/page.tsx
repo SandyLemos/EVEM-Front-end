@@ -1,10 +1,10 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import Link from "next/link"
 import { Navbar } from "../evem-projeto/components/Navbar"
 import {
-  Ticket as TicketIcon, // Renomeado para não conflitar com a Interface
+  Ticket,
   Search,
   MapPin,
   Calendar,
@@ -17,24 +17,80 @@ import {
   Utensils,
   BookOpen,
   Baby,
-  Clock,
 } from "lucide-react"
 
-// 1. Definindo a Interface para acabar com o erro de "any"
-interface TicketData {
-  id: string | number
-  status: "active" | "pending" | "cancelled" | "finished"
-  title: string
-  imageSrc?: string
-  img?: string
-  categoryLabel?: string
-  category?: string
-  description?: string
-  location: string
-  date: string
-  type?: string
-}
+// Mock Data para Ingressos "Ativos"
+const myTickets = [
+  {
+    id: 101,
+    title: "Masterclass de IA Generativa",
+    description:
+      "Uma imersão técnica sobre como implementar modelos de linguagem em fluxos de trabalho empresariais.",
+    category: "technology",
+    categoryLabel: "Tecnologia",
+    location: "Polo Tecnológico, Recife",
+    date: "Quarta, 15 a 23 de Out - 13:00",
+    tickets: 120,
+    imageSrc: "/img/Masterclass-de-IA.jpg",
+    status: "active",
+    type: "Ingresso Único",
+  },
+  {
+    id: 102,
+    title: "Festival de Inverno: Jazz & Blues",
+    description:
+      "Uma noite inesquecível com os maiores expoentes do Jazz nacional sob as estrelas.",
+    category: "musicalShows",
+    categoryLabel: "Shows Musicais",
+    location: "Teatro de Arena, Vitória",
+    date: "15 de Jun - 19:00",
+    tickets: 300,
+    imageSrc: "/img/Festival-de-Inverno.jpg",
+    status: "active",
+    type: "VIP",
+  },
+  {
+    id: 103,
+    title: "Maratona do Sol",
+    description:
+      "A maior corrida de rua da cidade, com percursos de 5km, 10km e 21km para atletas de todos os níveis.",
+    category: "sports",
+    categoryLabel: "Esportes",
+    location: "Orla da Praia, Fortaleza",
+    date: "20 de Abr - 14:00",
+    tickets: 1000,
+    imageSrc: "/img/Maratona-do-Sol.jpg",
+    status: "active",
+  },
+  {
+    id: 104,
+    title: "Degustação de Vinhos e Queijos",
+    description:
+      "Explore sabores artesanais de pequenos produtores locais em uma experiência sensorial única.",
+    category: "gastronomy",
+    categoryLabel: "Gastronomia",
+    location: "Bistrô Central, Bento Gonçalves",
+    date: "10 de Ago - 16:00",
+    tickets: 40,
+    imageSrc: "/img/Degustacao-de-Vinhos-e-Queijos.jpg",
+    status: "active",
+  },
+  {
+    id: 105,
+    title: "Festival Cientistas do Futuro",
+    description:
+      "Um dia inteiro de oficinas interativas, experimentos químicos seguros e planetário móvel para crianças de 5 a 12 anos e seus pais.",
+    category: "kidsAndFamily",
+    categoryLabel: "Crianças e Família",
+    location: "Museu de Ciências, Porto Alegre",
+    date: "12 de Dez - 14:00",
+    tickets: 250,
+    imageSrc: "/img/Festival-Cientistas-do-Futuro.jpg",
+    status: "active",
+  },
+]
 
+// Mock Data para Categorias
 const categories = [
   { icon: Music, label: "Shows e Festas", slug: "shows" },
   { icon: MonitorPlay, label: "Cursos e Workshops", slug: "cursos" },
@@ -50,44 +106,24 @@ const categories = [
 export default function TicketsPage() {
   const [activeTab, setActiveTab] = useState("Ativos")
 
-  // 2. Inicialização segura para o Next.js (Evita cascading renders)
-  const [allTickets, setAllTickets] = useState<TicketData[]>([])
-
-  useEffect(() => {
-    // Só acessamos o localStorage dentro do useEffect para garantir que estamos no cliente
-    const saved = localStorage.getItem("@evem:tickets")
-    if (saved) {
-      try {
-        setAllTickets(JSON.parse(saved))
-      } catch (error) {
-        console.error("Erro ao carregar tickets:", error)
-      }
-    }
-  }, [])
-
   const tabs = ["Ativos", "Pendentes", "Cancelados", "Encerrados"]
-
-  const filteredTickets = allTickets.filter((ticket) => {
-    if (activeTab === "Ativos") return ticket.status === "active"
-    if (activeTab === "Pendentes") return ticket.status === "pending"
-    if (activeTab === "Cancelados") return ticket.status === "cancelled"
-    if (activeTab === "Encerrados") return ticket.status === "finished"
-    return false
-  })
 
   return (
     <div className="min-h-screen bg-[#dae4f8] pb-10 flex flex-col items-center">
       <Navbar />
 
       <main className="w-[95%] max-w-[1200px] mt-8">
+        {/* Título da Página */}
         <div className="flex items-center gap-3 mb-8">
-          <TicketIcon className="text-[#0085D7] w-8 h-8 -rotate-45" />
+          <Ticket className="text-[#0085D7] w-8 h-8 -rotate-45" />
           <h1 className="text-3xl font-bold text-black font-serif">
             Ingressos
           </h1>
         </div>
 
+        {/* Barra de Controles: Abas e Busca */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+          {/* Abas */}
           <div className="flex gap-3 overflow-x-auto pb-2 w-full md:w-auto scrollbar-hide">
             {tabs.map((tab) => (
               <button
@@ -104,6 +140,7 @@ export default function TicketsPage() {
             ))}
           </div>
 
+          {/* Busca */}
           <div className="relative w-full md:w-[400px]">
             <input
               type="text"
@@ -114,36 +151,35 @@ export default function TicketsPage() {
           </div>
         </div>
 
+        {/* --- CONTEÚDO PRINCIPAL (LÓGICA DE TROCA) --- */}
         <div className="min-h-[300px]">
-          {filteredTickets.length > 0 ? (
+          {activeTab === "Ativos" ? (
+            // Lista de Ingressos (Aparece apenas na aba Ativos)
             <div className="flex flex-col gap-6">
-              {filteredTickets.map((ticket) => (
+              {myTickets.map((ticket) => (
                 <div
                   key={ticket.id}
                   className="bg-white rounded-3xl p-4 flex flex-col md:flex-row gap-6 items-center shadow-sm border-2 border-transparent hover:border-[#0085D7] hover:shadow-md transition-all duration-300"
                 >
+                  {/* Imagem */}
                   <div className="w-full md:w-[200px] h-[140px] flex-shrink-0 rounded-2xl overflow-hidden relative">
                     <img
-                      src={
-                        ticket.imageSrc ||
-                        ticket.img ||
-                        "/placeholder-event.png"
-                      }
+                      src={ticket.imageSrc}
                       alt={ticket.title}
                       className="w-full h-full object-cover"
                     />
                   </div>
 
+                  {/* Informações */}
                   <div className="flex-grow text-center md:text-left w-full">
                     <span className="inline-block px-3 py-1 rounded-full text-[10px] font-bold mb-2 bg-[#F3E5F5] text-[#7B1FA2]">
-                      {ticket.categoryLabel || ticket.category || "Evento"}
+                      {ticket.categoryLabel}
                     </span>
                     <h3 className="text-lg font-extrabold text-gray-900 mb-1">
                       {ticket.title}
                     </h3>
                     <p className="text-xs text-gray-500 max-w-lg mx-auto md:mx-0 mb-3">
-                      {ticket.description ||
-                        "Ingresso adquirido via plataforma Evem."}
+                      {ticket.description}
                     </p>
                     <div className="flex flex-col md:flex-row gap-4 justify-center md:justify-start text-xs text-gray-600">
                       <span className="flex items-center gap-1">
@@ -157,27 +193,16 @@ export default function TicketsPage() {
                     </div>
                   </div>
 
+                  {/* Ação / Status */}
                   <div className="w-full md:w-auto flex-shrink-0 flex flex-col items-center md:items-end gap-3 px-4">
                     <div className="bg-[#F3F0FA] px-4 py-2 rounded-lg flex items-center gap-2">
-                      {ticket.status === "active" ? (
-                        <TicketIcon className="w-4 h-4 text-[#7b2cbf]" />
-                      ) : (
-                        <Clock className="w-4 h-4 text-yellow-600" />
-                      )}
+                      <Ticket className="w-4 h-4 text-[#7b2cbf]" />
                       <div className="text-right">
                         <span className="block text-xs font-bold text-gray-800">
-                          {ticket.type || "Entrada Geral"}
+                          {ticket.type}
                         </span>
-                        <span
-                          className={`block text-[10px] font-bold uppercase ${
-                            ticket.status === "active"
-                              ? "text-green-600"
-                              : "text-yellow-600"
-                          }`}
-                        >
-                          {ticket.status === "active"
-                            ? "Confirmado"
-                            : "Pendente"}
+                        <span className="block text-[10px] text-green-600 font-bold uppercase">
+                          Confirmado
                         </span>
                       </div>
                     </div>
@@ -192,9 +217,10 @@ export default function TicketsPage() {
               ))}
             </div>
           ) : (
+            // Estado Vazio (Aparece nas outras abas)
             <div className="bg-[#e8efff] rounded-3xl h-[400px] flex flex-col items-center justify-center gap-6 shadow-inner">
               <p className="text-gray-500 text-lg font-medium">
-                Não há ingressos na categoria {activeTab}
+                Não há ingressos nesta categoria
               </p>
               <Link
                 href="/events"
@@ -206,7 +232,7 @@ export default function TicketsPage() {
           )}
         </div>
 
-        {/* Rodapé de Categorias */}
+        {/* --- RODAPÉ DE CATEGORIAS --- */}
         <section className="mt-16 mb-10">
           <h2 className="text-2xl font-bold text-[#eebb58] mb-8 border-b-2 border-[#eebb58] inline-block pb-1 font-serif">
             Navegue por Categorias
