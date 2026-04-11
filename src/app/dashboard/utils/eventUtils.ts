@@ -176,3 +176,28 @@ export const updateEventStatuses = (events: Event[]): Event[] => {
   // Since status is now manual (active/inactive), we don't auto-update it
   return events
 }
+
+export const formatEventDate = (dateObj: EventDate | undefined ) : string => {
+  if (!dateObj || !dateObj.startDate) return "Data a definir"
+
+  // Criamos objetos Date (ajustando o fuso horário para evitar que a data mude)
+  const start = new Date(dateObj.startDate + "T00:00:00")
+  const end = dateObj.endDate ? new Date(dateObj.endDate + "T00:00:00") : null
+
+  const diaSemana = start.toLocaleDateString("pt-BR", { weekday: "long" })
+  const diaMes = start.getDate()
+  const mes = start.toLocaleDateString("pt-BR", { month: "short" })
+
+  // Capitaliza a primeira letra (quarta -> Quarta)
+  const diaSemanaFormatado =
+    diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1).split("-")[0]
+
+  // Caso 1: Evento de vários dias (Ex: 15 a 23 Out)
+  if (end && dateObj.startDate !== dateObj.endDate) {
+    const diaFim = end.getDate()
+    return `${diaSemanaFormatado}, ${diaMes} a ${diaFim} ${mes.replace(".", "")} - ${dateObj.startTime}`
+  }
+
+  // Caso 2: Evento de um dia só (Ex: Sexta às 22:00)
+  return `${diaSemanaFormatado} às ${dateObj.startTime}`
+}

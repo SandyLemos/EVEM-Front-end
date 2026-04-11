@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Navbar } from "../evem-projeto/components/Navbar"
 import { mockEvents as staticEvents } from "../dashboard/data/mockData"
+import { formatEventDate } from "../dashboard/utils/eventUtils"
+import { EventDate } from "../dashboard/types/event"
 
 import {
   Calendar,
@@ -48,9 +50,10 @@ interface EventData {
   categoryLabel?: string
   location: string | LocationData // Tipagem rigorosa: string ou objeto específico
   date?: string
-  dates?: { startDate: string; endDate?: string }[] // Ajustado para refletir o objeto real
+  dates?: EventDate[] // Ajustado para refletir o objeto real
   tickets?: number | string
   ticketsSold?: number
+  attendeeLimit?: number 
   image?: string
   imageUrl?: string
   imageSrc?: string
@@ -274,9 +277,9 @@ export default function EventsPage() {
               </div>
               <div className="text-sm text-gray-600 flex items-center gap-3">
                 <span className="text-purple-600 w-5">📅</span>
-                {event.date ||
-                  (event.dates && event.dates[0]?.startDate) ||
-                  "Data a definir"}
+                {event.dates && event.dates.length > 0
+                  ? formatEventDate(event.dates[0])
+                  : event.date || "Data a definir"}
               </div>
 
               <div className="flex justify-between items-center mt-2 bg-[#F3F0FA] p-3 rounded-xl">
@@ -284,7 +287,12 @@ export default function EventsPage() {
                   <span className="text-purple-600 text-lg">🎟️</span>
                   <div className="flex flex-col">
                     <strong className="text-gray-800 text-lg">
-                      {event.tickets || 0}
+                      {/* Lógica: Limite total - Ingressos vendidos */}
+                      {event.attendeeLimit && event.ticketsSold !== undefined
+                        ? (
+                            event.attendeeLimit - event.ticketsSold
+                          ).toLocaleString("pt-BR")
+                        : (Number(event.tickets) || 0).toLocaleString("pt-BR")}
                     </strong>
                     <span className="text-[10px] text-gray-500 font-bold uppercase">
                       Restantes
