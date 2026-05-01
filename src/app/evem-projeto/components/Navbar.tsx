@@ -93,7 +93,7 @@ export function Navbar() {
 
   return (
     // Usando grid ou flex justify-between com 3 colunas para alinhamento
-    <nav className="flex items-center justify-between px-6 md:px-10 py-4 bg-[#E2DDF8] relative z-50">
+    <nav className="flex items-center justify-between px-6 md:px-10 py-4 relative z-50">
       {/* 1. Espaçador/Bloco Esquerdo (Para alinhar a Logo no centro) */}
       {/* Ocupa o espaço à esquerda do menu */}
       <div className="w-[110px] hidden md:block flex-shrink-0"></div>

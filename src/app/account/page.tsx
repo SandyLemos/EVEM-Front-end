@@ -53,7 +53,7 @@ export default function AccountPage() {
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-[#1a0b2e] bg-[url('/img/fundo-hero.png')] bg-cover bg-center pb-10">
       {/* --- CABEÇALHO FLUTUANTE (BRANCO) --- */}
-      <header className="w-[95%] max-w-[1200px] bg-white mt-6 px-6 py-3 rounded-2xl shadow-lg grid grid-cols-[1fr_auto_1fr] items-center relative z-50">
+      <header className="w-[95%] max-w-[1200px] mt-6 px-6 py-3  shadow-lg grid grid-cols-[1fr_auto_1fr] items-center relative z-50">
         {/* Espaçador Esquerdo */}
         <div></div>
 

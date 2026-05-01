@@ -1,50 +1,13 @@
 "use client"
 
 import React, { createContext, useState, useContext, ReactNode } from "react"
-
-// --- Tipos de dados ---
-export interface ReceiverData {
-  fullName: string
-  email: string
-  confirmEmail: string
-}
-
-export type PaymentMethod = "creditCard" | "pix" | "boleto"
-
-export interface PaymentData {
-  method: PaymentMethod
-  pixQrCodeUrl?: string | null
-  cardNumber?: string
-  expiryDate?: string
-  cvv?: string
-}
-
-export interface SavedTicket {
-  id: string | number // O ID do evento original (ex: 'masterclass-ia')
-  ticketUniqueId: number // Um ID único para a transação (timestamp)
-  title: string
-  imageSrc: string
-  categoryLabel: string
-  location: string
-  date: string
-  status: "active" | "pending" | "cancelled" | "finished"
-  type: string
-  description?: string
-}
-
-interface CheckoutContextType {
-  receiverData: ReceiverData
-  setReceiverData: (data: ReceiverData) => void
-  paymentData: PaymentData
-  setPaymentData: (data: PaymentData) => void
-  currentStep: 1 | 2 | 3
-  setCurrentStep: (step: 1 | 2 | 3) => void
-  paymentStatus: "initial" | "processing" | "succeeded" | "pending" | "failed"
-  setPaymentStatus: (
-    status: "initial" | "processing" | "succeeded" | "pending" | "failed",
-  ) => void
-  saveTicket: (eventData: any) => void
-}
+import {
+  ReceiverData,
+  PaymentData,
+  SavedTicket,
+  CheckoutContextType,
+  SaveTicketParams,
+} from "@/app/dashboard/types/checkout"
 
 const CheckoutContext = createContext<CheckoutContextType | undefined>(
   undefined,
@@ -52,8 +15,9 @@ const CheckoutContext = createContext<CheckoutContextType | undefined>(
 
 export const useCheckout = () => {
   const context = useContext(CheckoutContext)
-  if (!context)
+  if (!context) {
     throw new Error("useCheckout deve ser usado dentro de um CheckoutProvider")
+  }
   return context
 }
 
@@ -71,60 +35,78 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
     "initial" | "processing" | "succeeded" | "pending" | "failed"
   >("initial")
 
-  // --- LÓGICA DE SALVAMENTO CORRIGIDA ---
-  const saveTicket = (eventData: any) => {
+  /**
+   * Salva ou atualiza um ticket no localStorage.
+   * A lógica de normalização (como tratar descrição e imagem) foi integrada aqui
+   * para garantir a consistência na página de ingressos.
+   */
+  const saveTicket = (
+    eventData: SaveTicketParams,
+    statusOverride?: "succeeded" | "pending",
+  ) => {
     if (typeof window === "undefined") return
 
-    // 1. Verificação Crítica: Se não houver ID do evento, avisar no console
     if (!eventData.id) {
-      console.error(
-        "ERRO CRÍTICO: Tentativa de salvar ticket sem ID de evento original!",
-      )
+      console.error("[Evem] Erro: Tentativa de salvar ticket sem ID.")
+      return
     }
 
     const savedTickets: SavedTicket[] = JSON.parse(
       localStorage.getItem("@evem:tickets") || "[]",
     )
 
-    // 2. Definimos o status com base no método de pagamento ou status atual
-    // Pix e Boleto geralmente ficam "pending", Cartão fica "active" (succeeded)
-    const finalStatus = paymentStatus === "succeeded" ? "active" : "pending"
+    // Lógica de status: succeeded vira 'active', qualquer outra coisa vira 'pending'
+    const statusToUse =
+      statusOverride ||
+      (paymentStatus === "succeeded" || paymentStatus === "pending"
+        ? paymentStatus
+        : "pending")
 
-    // 3. Verificamos se esse usuário já tem esse evento (para atualizar em vez de duplicar)
+    const finalStatus = statusToUse === "succeeded" ? "active" : "pending"
+
     const existingIndex = savedTickets.findIndex(
       (t) => String(t.id) === String(eventData.id),
     )
 
+    // Normalização dos dados (Garante que campos de diferentes fontes funcionem)
+    const normalizedDescription = Array.isArray(eventData.description)
+      ? eventData.description[0]
+      : eventData.description || "Ingresso adquirido via plataforma Evem."
+
+    const normalizedImage =
+      eventData.imageSrc ||
+      eventData.img ||
+      eventData.imageUrl ||
+      ""
+
     if (existingIndex !== -1) {
-      // Atualiza o ticket existente
+      // Atualiza o ticket existente com os NOVOS dados do evento selecionado
       savedTickets[existingIndex] = {
-        ...savedTickets[existingIndex],
-        status: finalStatus,
-        // Mantemos os dados, mas atualizamos o status
+        ...savedTickets[existingIndex], // mantém dados como ticketUniqueId
+        title: eventData.title || savedTickets[existingIndex].title,
+        imageSrc: normalizedImage || savedTickets[existingIndex].imageSrc,
+        location: eventData.location || savedTickets[existingIndex].location,
+        status: finalStatus, // Atualiza o status (active/pending)
       }
       localStorage.setItem("@evem:tickets", JSON.stringify(savedTickets))
-      console.log("Status do ingresso atualizado:", finalStatus)
     } else {
-      // Cria um novo ticket usando o ID DO EVENTO ORIGINAL
+      // Cria um novo ticket
       const newTicket: SavedTicket = {
-        id: eventData.id, // AQUI: Manter o ID do evento (ex: 1, 2, ou 'show-x')
-        ticketUniqueId: Date.now(), // ID único para controle interno se precisar
+        id: eventData.id,
+        ticketUniqueId: Date.now(),
         title: eventData.title || "Evento",
-        imageSrc: eventData.imageSrc || eventData.img || "",
+        imageSrc: normalizedImage,
         categoryLabel: eventData.categoryLabel || eventData.category || "Geral",
         location: eventData.location || "Local não informado",
         date: eventData.date || "Data a definir",
         type: eventData.type || "Entrada Geral",
         status: finalStatus,
-        description:
-          eventData.description || "Ingresso adquirido via plataforma Evem.",
+        description: normalizedDescription,
       }
 
-      const newList = [newTicket, ...savedTickets]
-      localStorage.setItem("@evem:tickets", JSON.stringify(newList))
-      console.log(
-        "Novo ingresso salvo com sucesso. ID de redirecionamento:",
-        newTicket.id,
+      localStorage.setItem(
+        "@evem:tickets",
+        JSON.stringify([newTicket, ...savedTickets]),
       )
     }
   }

@@ -2,6 +2,14 @@ import { useState, useEffect } from "react"
 import { Event } from "../app/dashboard/types/event"
 import { mockEvents } from "../app/dashboard/data/mockData"
 
+export interface EventContextData {
+  events: Event[]
+  selectedEvent: Event | null // Adicione esta linha
+  setEvents: (newEvents: Event[]) => void
+  setSelectedEvent: (event: Event | null) => void // Adicione esta linha se necessário
+}
+
+
 export function useEvents() {
   // 1. Inicializamos o estado com uma função (Lazy Initializer)
   // Isso roda apenas UMA vez na criação do componente.

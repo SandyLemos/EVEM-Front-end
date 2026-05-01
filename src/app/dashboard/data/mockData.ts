@@ -73,7 +73,7 @@ export const mockEvents: Event[] = [
       },
     ],
     location: {
-      name: "Tech Hub São Paulo",
+      name: "Tech Hub",
       street: "Av. Paulista, 1578",
       neighborhood: "Bela Vista",
       city: "São Paulo",
@@ -397,23 +397,23 @@ export const mockActivities: Activity[] = [
 
 export const eventDetails: EventDetailsMock = {
   "1": {
-    ...mockEvents[0],
+    ...(mockEvents.find((e) => e.id === "1") || mockEvents[0]),
     schedule: mockActivities.filter((a) => a.eventId === "1"),
   },
   "2": {
-    ...mockEvents[1],
+    ...(mockEvents.find((e) => e.id === "2") || mockEvents[1]),
     schedule: mockActivities.filter((a) => a.eventId === "2"),
   },
   "3": {
-    ...mockEvents[2],
+    ...(mockEvents.find((e) => e.id === "3") || mockEvents[2]),
     schedule: mockActivities.filter((a) => a.eventId === "3"),
   },
   "4": {
-    ...mockEvents[3],
+    ...(mockEvents.find((e) => e.id === "4") || mockEvents[3]),
     schedule: mockActivities.filter((a) => a.eventId === "4"),
   },
   "5": {
-    ...mockEvents[4],
+    ...(mockEvents.find((e) => e.id === "5") || mockEvents[4]),
     schedule: mockActivities.filter((a) => a.eventId === "5"),
   },
   default: {

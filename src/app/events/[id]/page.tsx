@@ -153,9 +153,7 @@ export default function EventDetailsPage() {
               </div>
               <div className="flex items-center gap-3 justify-center md:justify-start">
                 <MapPin className="text-[#d62f98] w-5 h-5" />
-                <span className="text-lg">
-                  {displayLocation}
-                </span>
+                <span className="text-lg">{displayLocation}</span>
               </div>
             </div>
 
@@ -275,7 +273,7 @@ export default function EventDetailsPage() {
 
             <Link
               // Usando 'href' do Next.js
-              href="/payment"
+              href={`/payment?id=${event.id}`}
               className="block w-full bg-[#0085D7] hover:bg-[#006bb3] text-white text-center font-bold py-4 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
             >
               Comprar Ingresso
