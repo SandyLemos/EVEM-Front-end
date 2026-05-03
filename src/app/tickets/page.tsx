@@ -76,10 +76,12 @@ export default function TicketsPage() {
   })
 
   return (
-    <div className="min-h-screen bg-[#dae4f8] pb-10 flex flex-col items-center">
-      <Navbar />
+    <div className="min-h-screen bg-[#dae4f8] pb-10 pt-24 flex flex-col items-center relative">
+      <div className="absolute inset-x-0 top-4 z-50">
+        <Navbar />
+      </div>
 
-      <main className="w-[95%] max-w-[1200px] mt-8">
+      <main className="w-[95%] max-w-[1200px] mt-8 px-4 md:px-0">
         <div className="flex items-center gap-3 mb-8">
           <TicketIcon className="text-[#0085D7] w-8 h-8 -rotate-45" />
           <h1 className="text-3xl font-bold text-black font-serif">

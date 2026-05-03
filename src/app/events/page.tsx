@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Navbar } from "../evem-projeto/components/Navbar"
 import { mockEvents as staticEvents } from "../dashboard/data/mockData"
 import { formatEventDate } from "../dashboard/utils/eventUtils"
@@ -144,28 +145,36 @@ export default function EventsPage() {
     <div className="min-h-screen bg-[#E2DDF8] pb-10">
       <Navbar />
 
-      <section className="py-10 px-6 md:px-16 bg-gradient-to-b from-[#E2DDF8] to-white/50">
-        <div className="flex items-center gap-3 mb-6">
-          <Calendar className="text-[#d62f98] w-6 h-6" />
-          <h2 className="text-2xl md:text-3xl font-bold font-serif text-[#4B0082]">
-            Destaques da{" "}
-            <span className="text-[#eebb58] underline decoration-[#eebb58]">
-              Semana
-            </span>
-          </h2>
+      <section className="py-10 px-6 md:px-16 lg:px-24 bg-gradient-to-b from-[#E2DDF8] to-white/50">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <Calendar className="text-[#d62f98] w-6 h-6" />
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold font-serif text-[#4B0082]">
+              Destaques da{" "}
+              <span className="text-[#eebb58] underline decoration-[#eebb58]">
+                Semana
+              </span>
+            </h2>
+          </div>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center rounded-full border border-[#4B0082] bg-white/90 px-5 py-2 text-sm font-semibold text-[#4B0082] shadow-sm transition hover:bg-[#4B0082] hover:text-white"
+          >
+            Voltar para a página principal
+          </Link>
         </div>
 
         <div className="relative group">
           <div
             ref={carouselRef}
-            className="flex gap-6 overflow-x-auto scrollbar-hide py-4 px-2 scroll-smooth"
+            className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide py-4 px-2 scroll-smooth"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {allEvents.slice(0, 5).map((event) => (
               <div
                 key={event.id}
                 onClick={() => goToDetails(event.id)}
-                className="min-w-[280px] h-[400px] relative rounded-3xl overflow-hidden flex-shrink-0 shadow-xl transition-transform hover:scale-105 cursor-pointer"
+                className="min-w-[200px] sm:min-w-[280px] md:min-w-[320px] h-[350px] sm:h-[400px] relative rounded-3xl overflow-hidden flex-shrink-0 shadow-xl transition-transform hover:scale-105 cursor-pointer"
               >
                 <img
                   src={
@@ -216,7 +225,7 @@ export default function EventsPage() {
         </div>
       </section>
 
-      <header className="px-6 py-6 md:px-16">
+      <header className="px-6 py-6 md:px-16 lg:px-24">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex gap-4 w-full md:w-auto">
             <button className="bg-[#0085D7] text-white px-6 py-2.5 rounded-full font-bold shadow-md hover:bg-[#006bb3]">
@@ -239,14 +248,14 @@ export default function EventsPage() {
         </div>
       </header>
 
-      <main className="px-6 md:px-16 flex flex-col gap-6">
+      <main className="px-6 md:px-16 lg:px-24 flex flex-col gap-6">
         {allEvents.map((event) => (
           <div
             key={event.id}
             onClick={() => goToDetails(event.id)}
             className="bg-white rounded-3xl p-4 flex flex-col md:flex-row gap-6 items-center shadow-sm border-2 border-transparent hover:border-[#0085D7] hover:shadow-md transition-all cursor-pointer"
           >
-            <div className="w-full md:w-[240px] h-[160px] flex-shrink-0 rounded-2xl overflow-hidden relative shadow-inner">
+            <div className="w-full md:w-[200px] lg:w-[240px] h-[140px] md:h-[160px] flex-shrink-0 rounded-2xl overflow-hidden relative shadow-inner">
               <img
                 src={
                   event.imageUrl ||
@@ -273,7 +282,7 @@ export default function EventsPage() {
               </p>
             </div>
 
-            <div className="w-full md:w-[280px] flex-shrink-0 flex flex-col gap-3 pl-0 md:pl-6 border-l-0 md:border-l border-gray-100">
+            <div className="w-full md:w-[250px] lg:w-[280px] flex-shrink-0 flex flex-col gap-3 pl-0 md:pl-6 border-l-0 md:border-l border-gray-100">
               <div className="text-sm text-gray-600 flex items-center gap-3">
                 <span className="text-purple-600 w-5">📍</span>
                 {typeof event.location === "object"
@@ -326,7 +335,7 @@ export default function EventsPage() {
         ))}
       </main>
 
-      <footer className="mt-16 text-center border-t border-gray-300 pt-8 mx-16">
+      <footer className="mt-16 text-center border-t border-gray-300 pt-8 mx-6 md:mx-16 lg:mx-24">
         <p className="text-gray-500 text-sm">
           © 2025 EVEM – Todos os direitos reservados.
         </p>

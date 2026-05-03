@@ -268,7 +268,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-background">
       <Toaster position="top-right" />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
           <div>
