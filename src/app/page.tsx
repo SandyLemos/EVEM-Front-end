@@ -138,9 +138,9 @@ export default function LandingPage() {
           <img
             src="/img/fundo-hero.png"
             alt="Background"
-            className="w-full h-full object-cover opacity-60"
+            className="w-full h-full object-cover opacity-80 filter brightness-110"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0d001a]/80 via-[#0d001a]/60 to-[#0d001a]"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0d001a]/60 via-[#0d001a]/40 to-[#0d001a]/70"></div>
         </div>
 
         {/* Elementos Decorativos (Círculos) */}
@@ -150,15 +150,6 @@ export default function LandingPage() {
 
         {/* Conteúdo Hero */}
         <div className="relative z-10 max-w-4xl mx-auto">
-          {/* Logo Principal (Grande) */}
-          <div className="mb-10 flex justify-center">
-            {/* Usando a imagem logo-hero.png que você enviou */}
-            <img
-              src="/img/logo-hero.png"
-              alt="EVEM Event Management"
-              className="w-[300px] md:w-[500px] h-auto drop-shadow-2xl"
-            />
-          </div>
 
           <div className="flex flex-col sm:flex-row justify-center gap-6 mt-8">
             <Link

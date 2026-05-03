@@ -103,7 +103,7 @@ export default function FavoritesPage() {
   return (
     <div className="min-h-screen bg-[#dae4f8] pb-10 flex flex-col items-center">
       <Navbar />
-      <main className="w-[95%] max-w-[1200px] mt-8 bg-white/50 backdrop-blur-sm border border-white/60 rounded-[30px] p-6 md:p-10 shadow-xl relative overflow-hidden">
+      <main className="w-[95%] max-w-[1200px] mt-8 px-4 md:px-0 bg-white/50 backdrop-blur-sm border border-white/60 rounded-[30px] p-6 md:p-10 shadow-xl relative overflow-hidden">
         <div className="absolute inset-0 border-[3px] border-[#3B82F6] rounded-[30px] pointer-events-none"></div>
 
         <div className="flex items-center gap-3 mb-8 relative z-10">

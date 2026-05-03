@@ -16,9 +16,9 @@ export default function LoginPage() {
 
   return (
     // Container Principal com Imagem de Fundo
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#1a0b2e] bg-[url('/img/fundo-hero.png')] bg-cover bg-center p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[linear-gradient(rgba(13,0,26,0.92),rgba(13,0,26,0.92)),url('/img/fundo-hero.png')] bg-cover bg-center p-4 md:p-8">
       {/* Card de Login (Efeito de Vidro) */}
-      <div className="w-full max-w-[380px] p-8 rounded-xl border border-white/10 bg-[#1e0a32]/60 backdrop-blur-md shadow-2xl text-center text-white">
+      <div className="w-full max-w-[380px] p-8 rounded-xl border border-white/10 bg-[#1e0a32]/80 backdrop-blur-md shadow-2xl text-center text-white">
         <h2 className="text-3xl font-bold mb-8">Login</h2>
 
         <form onSubmit={handleSubmit} className="text-left flex flex-col gap-5">

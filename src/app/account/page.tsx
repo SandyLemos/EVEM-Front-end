@@ -51,9 +51,9 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center bg-[#1a0b2e] bg-[url('/img/fundo-hero.png')] bg-cover bg-center pb-10">
+    <div className="min-h-screen w-full flex flex-col items-center bg-[linear-gradient(rgba(13,0,26,0.92),rgba(13,0,26,0.92)),url('/img/fundo-hero.png')] bg-cover bg-center pb-10">
       {/* --- CABEÇALHO FLUTUANTE (BRANCO) --- */}
-      <header className="w-[95%] max-w-[1200px] mt-6 px-6 py-3  shadow-lg grid grid-cols-[1fr_auto_1fr] items-center relative z-50">
+      <header className="w-[95%] max-w-[1200px] mt-6 px-4 md:px-6 py-3  shadow-lg grid grid-cols-[1fr_auto_1fr] items-center relative z-50">
         {/* Espaçador Esquerdo */}
         <div></div>
 

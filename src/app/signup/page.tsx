@@ -57,9 +57,9 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#1a0b2e] bg-[url('/img/fundo-hero.png')] bg-cover bg-center p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[linear-gradient(rgba(13,0,26,0.92),rgba(13,0,26,0.92)),url('/img/fundo-hero.png')] bg-cover bg-center p-4 md:p-8">
       {/* Container do Card com animação suave */}
-      <div className="w-full max-w-[500px] p-8 rounded-2xl border border-white/10 bg-[#1e0a32]/70 backdrop-blur-xl shadow-2xl text-center text-white transition-all duration-300">
+      <div className="w-full max-w-[500px] p-8 rounded-2xl border border-white/10 bg-[#1e0a32]/85 backdrop-blur-xl shadow-2xl text-center text-white transition-all duration-300">
         <h2 className="text-3xl font-bold mb-2">Cadastro</h2>
 
         {/* --- PASSO 1: SELEÇÃO --- */}
