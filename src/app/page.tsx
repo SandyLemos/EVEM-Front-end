@@ -21,7 +21,7 @@ import {
   ChevronRight,
   ArrowUp,
 } from "lucide-react"
-
+import { useParams, useRouter } from "next/navigation" // Certifique-se de importar o useRouter
 // --- Componentes Auxiliares ---
 
 // Header Transparente
@@ -121,12 +121,17 @@ const categories = [
     glow: "hover:shadow-rose-500/10 hover:border-rose-500/30",
   },
 ]
-
 export default function LandingPage() {
+  const router = useRouter() // <-- Adicione isso
   const { events: rawEvents } = useEvents()
   const [currentSlide, setCurrentSlide] = useState(0)
-  const [selectedCategory, setSelectedCategory] = useState<string>("all") // Estado do filtro ativo
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const carouselRef = useRef<HTMLDivElement>(null)
+
+  // <-- Adicione a função aqui:
+  const goToDetails = (id: string | number) => {
+    router.push(`/events/${id}`)
+  }
 
   // Filtra primeiro pela categoria selecionada, se houver uma ativa
   const filteredEvents = rawEvents.filter((event) => {
@@ -342,106 +347,89 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* --- SEÇÃO DESTAQUES --- */}
-      <section className="py-24 px-6 md:px-16 bg-gradient-to-b from-[#0d001a] to-[#140624] overflow-hidden">
+      {/* --- SEÇÃO CARROSSEL DESTAQUES --- */}
+      <section className="py-16 px-6 md:px-16 lg:px-24 bg-[#0d001a] relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-3.5 mb-12">
-            <div className="p-2.5 rounded-xl bg-[#d62f98]/10 text-[#d62f98] border border-[#d62f98]/20 shadow-[0_0_15px_rgba(214,47,152,0.1)]">
-              <Calendar className="w-6 h-6" />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
-              Próximos eventos em{" "}
-              <span className="text-[#eebb58] relative inline-block">
-                destaque
-                <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#eebb58]/40 rounded"></span>
-              </span>
-              {selectedCategory !== "all" && (
-                <span className="text-xs md:text-sm font-medium text-gray-400 block sm:inline sm:ml-2">
-                  (Filtrado por:{" "}
-                  {categories.find((c) => c.key === selectedCategory)?.label})
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-3">
+              <Calendar className="text-[#d62f98] w-6 h-6" />
+              <h2 className="text-2xl md:text-3xl font-bold font-serif text-[#4B0082]">
+                Destaques da{" "}
+                <span className="text-[#eebb58] underline decoration-[#eebb58]">
+                  Semana
                 </span>
-              )}
-            </h2>
+              </h2>
+            </div>
           </div>
 
-          <div className="relative group/carousel px-1">
+          <div className="relative group px-1">
             <div
               ref={carouselRef}
-              className="flex gap-6 overflow-x-auto py-4 scroll-smooth snap-x snap-mandatory scrollbar-none"
+              className="flex gap-5 overflow-x-auto scrollbar-hide py-3 px-1 scroll-smooth"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              {events.map((event) => (
-                <Link
+              {filteredEvents.slice(0, 5).map((event) => (
+                <div
                   key={event.id}
-                  href={`/event-details/${event.id}`}
-                  className="min-w-[290px] md:min-w-[310px] h-[440px] relative rounded-[24px] overflow-hidden flex-shrink-0 border border-white/5 snap-start shadow-[0_10px_30px_rgba(0,0,0,0.4)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_15px_35px_rgba(123,44,191,0.2)] hover:border-white/10 group"
+                  onClick={() => goToDetails(event.id)}
+                  className="min-w-[230px] sm:min-w-[250px] md:min-w-[260px] h-[340px] md:h-[360px] relative rounded-2xl overflow-hidden flex-shrink-0 shadow-md transition-all duration-300 hover:scale-[1.03] hover:shadow-xl cursor-pointer"
                 >
                   <img
-                    src={event.imageUrl || "/img/poster-raphael.jpg"}
+                    src={
+                      event.imageUrl ||
+                      event.image ||
+                      event.imageSrc ||
+                      "/img/placeholder.jpg"
+                    }
                     alt={event.title}
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    className="w-full h-full object-cover"
                   />
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0d001a] via-[#0d001a]/40 to-transparent transition-opacity duration-300 group-hover:via-[#0d001a]/50" />
-
-                  <div className="absolute inset-0 flex flex-col justify-end p-6 z-10">
-                    <div className="bg-white/10 backdrop-blur-md border border-white/10 text-white text-[11px] font-bold px-3 py-1.5 rounded-full w-fit mb-3.5 flex items-center gap-1.5 shadow-sm transition-colors group-hover:bg-[#d62f98]/20 group-hover:border-[#d62f98]/30">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-4 text-white">
+                    <div className="bg-white/90 text-black text-[10px] font-bold px-2.5 py-1 rounded-full w-fit mb-2 flex items-center gap-1">
                       <Ticket className="w-3 h-3 text-[#d62f98]" />
-                      <span>
-                        {event.ticketPrice
-                          ? `R$ ${event.ticketPrice}`
-                          : "Gratuito"}
-                      </span>
+                      {event.attendeeLimit && event.ticketsSold !== undefined
+                        ? event.attendeeLimit - event.ticketsSold <= 0
+                          ? "Esgotado"
+                          : `${(event.attendeeLimit - event.ticketsSold).toLocaleString("pt-BR")} rest.`
+                        : event.tickets === "Esgotado"
+                          ? "Esgotado"
+                          : `${(Number(event.tickets) || 0).toLocaleString("pt-BR")} rest.`}
                     </div>
-
-                    <h3 className="text-xl font-black text-white leading-tight mb-2.5 transition-colors group-hover:text-[#eebb58] line-clamp-2">
+                    <h3 className="text-base font-bold mb-1 leading-tight line-clamp-2">
                       {event.title}
                     </h3>
-
-                    <div className="flex items-center gap-2 text-gray-400 text-xs font-medium">
-                      <MapPin className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                    <div className="flex items-center gap-1.5 text-gray-300 text-[11px]">
+                      <MapPin className="w-3 h-3 text-gray-400" />
                       <span className="truncate">
-                        {event.location?.city && event.location?.state
-                          ? `${event.location.city} - ${event.location.state}`
-                          : "Local a definir"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-[#eebb58]/90 text-xs font-bold mt-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-[#eebb58]/70 flex-shrink-0" />
-                      <span>
-                        {event.dates && event.dates.length > 0
-                          ? new Date(
-                              event.dates[0].startDate,
-                            ).toLocaleDateString("pt-BR")
-                          : "Data a definir"}
+                        {typeof event.location === "object"
+                          ? event.location.city
+                          : event.location}
                       </span>
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
+
+              {filteredEvents.length === 0 && (
+                <div className="w-full text-center py-12 text-gray-500 text-sm font-medium">
+                  Nenhum evento em destaque encontrado para esta região.
+                </div>
+              )}
             </div>
 
-            {events.length === 0 && (
-              <div className="w-full text-center py-20 bg-white/[0.01] border border-white/[0.05] rounded-[24px] text-gray-400 text-sm font-medium">
-                Nenhum evento em destaque disponível para esta categoria no
-                momento.
-              </div>
-            )}
-
-            {events.length > 0 && (
+            {filteredEvents.length > 0 && (
               <>
                 <button
                   onClick={() => scrollCarousel("left")}
-                  className="absolute left-[-22px] top-1/2 -translate-y-1/2 bg-[#1a0b2e]/90 border border-white/10 p-2.5 rounded-full text-white hover:bg-[#d62f98] hover:border-transparent hover:text-white transition-all duration-300 opacity-0 scale-90 group-hover/carousel:opacity-100 group-hover/carousel:scale-100 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.5)] hidden md:block z-20"
-                  aria-label="Voltar slide"
+                  className="absolute left-[-15px] top-1/2 -translate-y-1/2 bg-white border border-gray-100 p-2 rounded-full text-[#4B0082] shadow-md hover:bg-[#d62f98] hover:text-white transition opacity-0 group-hover:opacity-100 hidden md:block z-10"
+                  aria-label="Voltar"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => scrollCarousel("right")}
-                  className="absolute right-[-22px] top-1/2 -translate-y-1/2 bg-[#1a0b2e]/90 border border-white/10 p-2.5 rounded-full text-white hover:bg-[#d62f98] hover:border-transparent hover:text-white transition-all duration-300 opacity-0 scale-90 group-hover/carousel:opacity-100 group-hover/carousel:scale-100 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.5)] hidden md:block z-20"
-                  aria-label="Avançar slide"
+                  className="absolute right-[-15px] top-1/2 -translate-y-1/2 bg-white border border-gray-100 p-2 rounded-full text-[#4B0082] shadow-md hover:bg-[#d62f98] hover:text-white transition opacity-0 group-hover:opacity-100 hidden md:block z-10"
+                  aria-label="Avançar"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -450,7 +438,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
       {/* --- FOOTER --- */}
       <div className="bg-[#e6e6e6] text-[#333]">
         <div
