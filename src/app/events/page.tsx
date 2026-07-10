@@ -35,7 +35,6 @@ const categoryColors = {
 
 type CategoryKeys = keyof typeof categoryColors
 
-// Tipagem para garantir consistência
 interface LocationData {
   city: string
   state: string
@@ -49,12 +48,12 @@ interface EventData {
   description: string
   category: CategoryKeys
   categoryLabel?: string
-  location: string | LocationData // Tipagem rigorosa: string ou objeto específico
+  location: string | LocationData
   date?: string
-  dates?: EventDate[] // Ajustado para refletir o objeto real
+  dates?: EventDate[]
   tickets?: number | string
   ticketsSold?: number
-  attendeeLimit?: number 
+  attendeeLimit?: number
   image?: string
   imageUrl?: string
   imageSrc?: string
@@ -63,7 +62,10 @@ interface EventData {
 export default function EventsPage() {
   const [allEvents, setAllEvents] = useState<EventData[]>([])
   const [favorites, setFavorites] = useState<(number | string)[]>([])
+  const [selectedCity, setSelectedCity] = useState<string>("all")
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false) // Estado para controlar abertura do Dropdown customizado
   const carouselRef = useRef<HTMLDivElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
   const toggleFavorite = (id: number | string) => {
@@ -74,7 +76,7 @@ export default function EventsPage() {
 
   const scrollCarousel = (direction: "left" | "right") => {
     if (carouselRef.current) {
-      const scrollAmount = 320
+      const scrollAmount = carouselRef.current.offsetWidth > 768 ? 280 : 240
       const newScrollPosition =
         direction === "left"
           ? carouselRef.current.scrollLeft - scrollAmount
@@ -91,20 +93,15 @@ export default function EventsPage() {
       try {
         const stored = localStorage.getItem("@evem:events")
         const dashboardEvents = stored ? JSON.parse(stored) : []
-
         const combined = [...dashboardEvents, ...staticEvents]
 
-        // Filtramos duplicatas
         const uniqueEvents = combined.filter(
           (event, index, self) =>
             index === self.findIndex((e) => e.id === event.id),
         )
 
-        // IMPORTANTE: Envolvemos em um timeout de 0ms ou verificamos se os dados mudaram
-        // Isso joga a execução para o final da fila de tarefas, evitando o erro de sincronia
         setTimeout(() => {
           setAllEvents(uniqueEvents)
-
           const storedFavs = localStorage.getItem("@evem:favorites")
           if (storedFavs) {
             setFavorites(JSON.parse(storedFavs))
@@ -112,16 +109,28 @@ export default function EventsPage() {
         }, 0)
       } catch (error) {
         console.error("Erro ao carregar localStorage:", error)
-        // Fallback para os estáticos em caso de erro
         setAllEvents(staticEvents as EventData[])
       }
     }
 
     loadData()
-  }, []) // Array de dependências vazio para rodar apenas uma vez
-  // 2. Persistência de favoritos (sempre que mudar)
+  }, [])
+
+  // Fechar o dropdown customizado se clicar fora dele
   useEffect(() => {
-    // Só salva se houver algo carregado para não sobrescrever o storage com vazio no init
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  useEffect(() => {
     if (allEvents.length > 0 || favorites.length > 0) {
       localStorage.setItem("@evem:favorites", JSON.stringify(favorites))
     }
@@ -130,6 +139,29 @@ export default function EventsPage() {
   const goToDetails = (id: number | string) => {
     router.push(`/events/${id}`)
   }
+
+  const getEventCity = (event: EventData): string => {
+    if (typeof event.location === "object" && event.location?.city) {
+      return event.location.city
+    }
+    if (typeof event.location === "string") {
+      return event.location.split("-")[0].trim()
+    }
+    return "Local a definir"
+  }
+
+  const availableCities = Array.from(
+    new Set(
+      allEvents
+        .map((event) => getEventCity(event))
+        .filter((city) => city && city !== "Local a definir"),
+    ),
+  )
+
+  const filteredEvents = allEvents.filter((event) => {
+    if (selectedCity === "all") return true
+    return getEventCity(event).toLowerCase() === selectedCity.toLowerCase()
+  })
 
   const defaultColor = "bg-gray-200 text-gray-700"
 
@@ -145,117 +177,197 @@ export default function EventsPage() {
     <div className="min-h-screen bg-[#E2DDF8] pb-10">
       <Navbar />
 
-      <section className="py-10 px-6 md:px-16 lg:px-24 bg-gradient-to-b from-[#E2DDF8] to-white/50">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3">
-            <Calendar className="text-[#d62f98] w-6 h-6" />
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold font-serif text-[#4B0082]">
-              Destaques da{" "}
-              <span className="text-[#eebb58] underline decoration-[#eebb58]">
-                Semana
-              </span>
-            </h2>
+      {/* --- SEÇÃO CARROSSEL DESTAQUES --- */}
+      <section className="py-12 px-6 md:px-16 lg:px-24 bg-gradient-to-b from-[#E2DDF8] to-white/50 overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-3">
+              <Calendar className="text-[#d62f98] w-6 h-6" />
+              <h2 className="text-2xl md:text-3xl font-bold font-serif text-[#4B0082]">
+                Destaques da{" "}
+                <span className="text-[#eebb58] underline decoration-[#eebb58]">
+                  Semana
+                </span>
+              </h2>
+            </div>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center rounded-full border border-[#4B0082] bg-white/90 px-5 py-2 text-sm font-semibold text-[#4B0082] shadow-sm transition hover:bg-[#4B0082] hover:text-white"
+            >
+              Voltar para a página principal
+            </Link>
           </div>
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center rounded-full border border-[#4B0082] bg-white/90 px-5 py-2 text-sm font-semibold text-[#4B0082] shadow-sm transition hover:bg-[#4B0082] hover:text-white"
-          >
-            Voltar para a página principal
-          </Link>
-        </div>
 
-        <div className="relative group">
-          <div
-            ref={carouselRef}
-            className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide py-4 px-2 scroll-smooth"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {allEvents.slice(0, 5).map((event) => (
-              <div
-                key={event.id}
-                onClick={() => goToDetails(event.id)}
-                className="min-w-[200px] sm:min-w-[280px] md:min-w-[320px] h-[350px] sm:h-[400px] relative rounded-3xl overflow-hidden flex-shrink-0 shadow-xl transition-transform hover:scale-105 cursor-pointer"
-              >
-                <img
-                  src={
-                    event.imageUrl ||
-                    event.image ||
-                    event.imageSrc ||
-                    "/img/placeholder.jpg"
-                  }
-                  alt={event.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-5 text-white">
-                  <div className="bg-white/90 text-black text-xs font-bold px-3 py-1 rounded-full w-fit mb-2 flex items-center gap-1">
-                    <Ticket className="w-3 h-3 text-[#d62f98]" />
-                    {/* Lógica unificada: Cálculo dinâmico ou texto de esgotado */}
-                    {event.attendeeLimit && event.ticketsSold !== undefined
-                      ? event.attendeeLimit - event.ticketsSold <= 0
-                        ? "Esgotado"
-                        : `${(event.attendeeLimit - event.ticketsSold).toLocaleString("pt-BR")} rest.`
-                      : event.tickets === "Esgotado"
-                        ? "Esgotado"
-                        : `${(Number(event.tickets) || 0).toLocaleString("pt-BR")} rest.`}
-                  </div>
-                  <h3 className="text-xl font-bold mb-1">{event.title}</h3>
-                  <div className="flex items-center gap-2 text-gray-300 text-xs">
-                    <MapPin className="w-3 h-3" />
-                    {typeof event.location === "object"
-                      ? event.location.city
-                      : event.location}
+          <div className="relative group px-1">
+            <div
+              ref={carouselRef}
+              className="flex gap-5 overflow-x-auto scrollbar-hide py-3 px-1 scroll-smooth"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              {filteredEvents.slice(0, 5).map((event) => (
+                <div
+                  key={event.id}
+                  onClick={() => goToDetails(event.id)}
+                  className="min-w-[230px] sm:min-w-[250px] md:min-w-[260px] h-[340px] md:h-[360px] relative rounded-2xl overflow-hidden flex-shrink-0 shadow-md transition-all duration-300 hover:scale-[1.03] hover:shadow-xl cursor-pointer"
+                >
+                  <img
+                    src={
+                      event.imageUrl ||
+                      event.image ||
+                      event.imageSrc ||
+                      "/img/placeholder.jpg"
+                    }
+                    alt={event.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-4 text-white">
+                    <div className="bg-white/90 text-black text-[10px] font-bold px-2.5 py-1 rounded-full w-fit mb-2 flex items-center gap-1">
+                      <Ticket className="w-3 h-3 text-[#d62f98]" />
+                      {event.attendeeLimit && event.ticketsSold !== undefined
+                        ? event.attendeeLimit - event.ticketsSold <= 0
+                          ? "Esgotado"
+                          : `${(event.attendeeLimit - event.ticketsSold).toLocaleString("pt-BR")} rest.`
+                        : event.tickets === "Esgotado"
+                          ? "Esgotado"
+                          : `${(Number(event.tickets) || 0).toLocaleString("pt-BR")} rest.`}
+                    </div>
+                    <h3 className="text-base font-bold mb-1 leading-tight line-clamp-2">
+                      {event.title}
+                    </h3>
+                    <div className="flex items-center gap-1.5 text-gray-300 text-[11px]">
+                      <MapPin className="w-3 h-3 text-gray-400" />
+                      <span className="truncate">
+                        {typeof event.location === "object"
+                          ? event.location.city
+                          : event.location}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
 
-          <button
-            onClick={() => scrollCarousel("left")}
-            className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full text-[#4B0082] shadow-lg hover:bg-[#d62f98] hover:text-white transition hidden md:block z-10"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <button
-            onClick={() => scrollCarousel("right")}
-            className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full text-[#4B0082] shadow-lg hover:bg-[#d62f98] hover:text-white transition hidden md:block z-10"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
+              {filteredEvents.length === 0 && (
+                <div className="w-full text-center py-12 text-gray-500 text-sm font-medium">
+                  Nenhum evento em destaque encontrado para esta região.
+                </div>
+              )}
+            </div>
+
+            {filteredEvents.length > 0 && (
+              <>
+                <button
+                  onClick={() => scrollCarousel("left")}
+                  className="absolute left-[-15px] top-1/2 -translate-y-1/2 bg-white border border-gray-100 p-2 rounded-full text-[#4B0082] shadow-md hover:bg-[#d62f98] hover:text-white transition opacity-0 group-hover:opacity-100 hidden md:block z-10"
+                  aria-label="Voltar"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => scrollCarousel("right")}
+                  className="absolute right-[-15px] top-1/2 -translate-y-1/2 bg-white border border-gray-100 p-2 rounded-full text-[#4B0082] shadow-md hover:bg-[#d62f98] hover:text-white transition opacity-0 group-hover:opacity-100 hidden md:block z-10"
+                  aria-label="Avançar"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </section>
 
+      {/* --- SEÇÃO DO FILTRO --- */}
       <header className="px-6 py-6 md:px-16 lg:px-24">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex gap-4 w-full md:w-auto">
-            <button className="bg-[#0085D7] text-white px-6 py-2.5 rounded-full font-bold shadow-md hover:bg-[#006bb3]">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex gap-4 w-full md:w-auto items-center">
+            <button className="bg-[#0085D7] text-white px-6 py-2.5 rounded-full font-bold shadow-md hover:bg-[#006bb3] text-sm flex-shrink-0">
               Ativo
             </button>
-            <div className="bg-white px-5 py-2.5 rounded-full font-bold text-gray-700 shadow-sm flex items-center gap-2">
-              📍 Local ▼
+
+            {/* DROPDOWN CUSTOMIZADO COM ACABAMENTO UI/UX MODERNIZADO */}
+            <div ref={dropdownRef} className="relative z-30">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="bg-white rounded-full shadow-sm border border-gray-100 px-5 py-2.5 flex items-center gap-2.5 hover:border-[#d62f98] focus:border-[#d62f98] transition-all min-w-[180px] justify-between text-left group"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">📍</span>
+                  <span className="font-bold text-gray-700 text-sm">
+                    {selectedCity === "all" ? "Todos os locais" : selectedCity}
+                  </span>
+                </div>
+                <span
+                  className={`text-[10px] text-gray-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180 text-[#d62f98]" : ""}`}
+                >
+                  ▼
+                </span>
+              </button>
+
+              {/* LISTA DO DROPDOWN (MODAL DE SELEÇÃO ESTILIZADO) */}
+              {isDropdownOpen && (
+                <div className="absolute left-0 mt-2 w-full min-w-[220px] bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_10px_25px_rgba(75,0,130,0.15)] border border-gray-100 py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <button
+                    onClick={() => {
+                      setSelectedCity("all")
+                      setIsDropdownOpen(false)
+                    }}
+                    className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-colors flex items-center justify-between ${
+                      selectedCity === "all"
+                        ? "bg-[#4B0082]/10 text-[#4B0082]"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-950"
+                    }`}
+                  >
+                    <span>Todos os locais</span>
+                    {selectedCity === "all" && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#4B0082]"></span>
+                    )}
+                  </button>
+
+                  {availableCities.map((city) => (
+                    <button
+                      key={city}
+                      onClick={() => {
+                        setSelectedCity(city)
+                        setIsDropdownOpen(false)
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-colors flex items-center justify-between ${
+                        selectedCity.toLowerCase() === city.toLowerCase()
+                          ? "bg-[#4B0082]/10 text-[#4B0082]"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-950"
+                      }`}
+                    >
+                      <span>{city}</span>
+                      {selectedCity.toLowerCase() === city.toLowerCase() && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#4B0082]"></span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
+
           <div className="relative w-full max-w-md">
             <input
               type="text"
               placeholder="Busque evento, local, etc"
-              className="w-full py-3 px-5 pr-12 rounded-full border border-[#d62f98] focus:ring-2 focus:ring-[#d62f98] text-sm shadow-sm"
+              className="w-full py-2.5 px-5 pr-12 rounded-full border border-[#d62f98] focus:ring-2 focus:ring-[#d62f98] text-sm shadow-sm text-gray-800"
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2">
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm">
               🔍
             </span>
           </div>
         </div>
       </header>
 
-      <main className="px-6 md:px-16 lg:px-24 flex flex-col gap-6">
-        {allEvents.map((event) => (
+      {/* --- LISTAGEM PRINCIPAL --- */}
+      <main className="px-6 md:px-16 lg:px-24 flex flex-col gap-5 max-w-7xl mx-auto">
+        {filteredEvents.map((event) => (
           <div
             key={event.id}
             onClick={() => goToDetails(event.id)}
-            className="bg-white rounded-3xl p-4 flex flex-col md:flex-row gap-6 items-center shadow-sm border-2 border-transparent hover:border-[#0085D7] hover:shadow-md transition-all cursor-pointer"
+            className="bg-white rounded-2xl p-4 flex flex-col md:flex-row gap-5 items-center shadow-sm border border-gray-100 hover:border-[#0085D7] hover:shadow-md transition-all cursor-pointer"
           >
-            <div className="w-full md:w-[200px] lg:w-[240px] h-[140px] md:h-[160px] flex-shrink-0 rounded-2xl overflow-hidden relative shadow-inner">
+            <div className="w-full md:w-[180px] lg:w-[220px] h-[130px] md:h-[140px] flex-shrink-0 rounded-xl overflow-hidden relative shadow-inner">
               <img
                 src={
                   event.imageUrl ||
@@ -270,45 +382,48 @@ export default function EventsPage() {
 
             <div className="flex-grow text-center md:text-left w-full">
               <span
-                className={`inline-block px-4 py-1.5 rounded-full text-xs font-bold mb-3 ${categoryColors[event.category as CategoryKeys] || defaultColor}`}
+                className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold mb-2 ${categoryColors[event.category as CategoryKeys] || defaultColor}`}
               >
                 {event.categoryLabel || event.category}
               </span>
-              <h3 className="text-xl font-extrabold text-gray-900 mb-2 leading-tight">
+              <h3 className="text-lg font-extrabold text-gray-900 mb-1.5 leading-tight">
                 {event.title}
               </h3>
-              <p className="text-sm text-gray-500 line-clamp-2">
+              <p className="text-xs text-gray-500 line-clamp-2">
                 {event.description}
               </p>
             </div>
 
-            <div className="w-full md:w-[250px] lg:w-[280px] flex-shrink-0 flex flex-col gap-3 pl-0 md:pl-6 border-l-0 md:border-l border-gray-100">
-              <div className="text-sm text-gray-600 flex items-center gap-3">
-                <span className="text-purple-600 w-5">📍</span>
-                {typeof event.location === "object"
-                  ? `${event.location.city}, ${event.location.state}`
-                  : event.location}
+            <div className="w-full md:w-[230px] lg:w-[260px] flex-shrink-0 flex flex-col gap-2.5 pl-0 md:pl-5 border-l-0 md:border-l border-gray-100">
+              <div className="text-xs text-gray-600 flex items-center gap-2">
+                <span className="text-purple-600 text-sm">📍</span>
+                <span className="truncate">
+                  {typeof event.location === "object"
+                    ? `${event.location.city}, ${event.location.state}`
+                    : event.location}
+                </span>
               </div>
-              <div className="text-sm text-gray-600 flex items-center gap-3">
-                <span className="text-purple-600 w-5">📅</span>
-                {event.dates && event.dates.length > 0
-                  ? formatEventDate(event.dates[0])
-                  : event.date || "Data a definir"}
+              <div className="text-xs text-gray-600 flex items-center gap-2">
+                <span className="text-purple-600 text-sm">📅</span>
+                <span>
+                  {event.dates && event.dates.length > 0
+                    ? formatEventDate(event.dates[0])
+                    : event.date || "Data a definir"}
+                </span>
               </div>
 
-              <div className="flex justify-between items-center mt-2 bg-[#F3F0FA] p-3 rounded-xl">
+              <div className="flex justify-between items-center mt-1 bg-[#F3F0FA] p-2.5 rounded-xl">
                 <div className="flex items-center gap-2">
-                  <span className="text-purple-600 text-lg">🎟️</span>
+                  <span className="text-purple-600 text-base">🎟️</span>
                   <div className="flex flex-col">
-                    <strong className="text-gray-800 text-lg">
-                      {/* Lógica: Limite total - Ingressos vendidos */}
+                    <strong className="text-gray-800 text-base leading-tight">
                       {event.attendeeLimit && event.ticketsSold !== undefined
                         ? (
                             event.attendeeLimit - event.ticketsSold
                           ).toLocaleString("pt-BR")
                         : (Number(event.tickets) || 0).toLocaleString("pt-BR")}
                     </strong>
-                    <span className="text-[10px] text-gray-500 font-bold uppercase">
+                    <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">
                       Restantes
                     </span>
                   </div>
@@ -319,26 +434,34 @@ export default function EventsPage() {
                     e.stopPropagation()
                     toggleFavorite(event.id)
                   }}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
                     favorites.includes(event.id)
                       ? "bg-[#d62f98]/10 border-[#d62f98] text-[#d62f98]"
                       : "bg-white border-gray-200 text-gray-400"
                   } border shadow-sm`}
                 >
                   <Heart
-                    className={`w-5 h-5 ${favorites.includes(event.id) ? "fill-current" : ""}`}
+                    className={`w-4 h-4 ${favorites.includes(event.id) ? "fill-current" : ""}`}
                   />
                 </button>
               </div>
             </div>
           </div>
         ))}
+
+        {filteredEvents.length === 0 && (
+          <div className="bg-white rounded-2xl p-12 text-center text-gray-500 shadow-sm border border-gray-100">
+            Nenhum evento encontrado para a cidade selecionada.
+          </div>
+        )}
       </main>
 
       <footer className="mt-16 text-center border-t border-gray-300 pt-8 mx-6 md:mx-16 lg:mx-24">
-        <p className="text-gray-500 text-sm">
-          © 2025 EVEM – Todos os direitos reservados.
-        </p>
+        <div className="max-w-7xl mx-auto">
+          <p className="text-gray-500 text-xs">
+            © 2025 EVEM – Todos os direitos reservados.
+          </p>
+        </div>
       </footer>
     </div>
   )

@@ -153,6 +153,16 @@ export default function SignupPage() {
               </div>
               <InputGroup label="Email Corporativo" id="o_email" type="email" />
 
+              {/* CAMPOS DE SENHA ADICIONADOS AQUI */}
+              <div className="grid grid-cols-2 gap-4">
+                <InputGroup label="Senha" id="o_password" type="password" />
+                <InputGroup
+                  label="Confirmar Senha"
+                  id="o_confirm"
+                  type="password"
+                />
+              </div>
+
               <div className="pt-4 border-t border-white/10">
                 <span className="text-[#eebb58] text-sm font-bold bg-[#2a1540] px-2">
                   Endereço

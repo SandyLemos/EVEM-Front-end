@@ -19,7 +19,7 @@ import {
   Baby,
 } from "lucide-react"
 
-// Interface para tipagem (Boa prática que você valoriza no planejamento)
+// Interface para tipagem
 interface EventTicket {
   id: string | number
   ticketUniqueId?: string
@@ -48,6 +48,7 @@ const categories = [
 export default function TicketsPage() {
   const [activeTab, setActiveTab] = useState("Ativos")
   const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("all") // Novo Estado de Categoria Ativa
 
   const tabs = ["Ativos", "Pendentes", "Cancelados", "Esgotados"]
 
@@ -59,7 +60,14 @@ export default function TicketsPage() {
     return []
   })
 
-  // Lógica de Filtragem: Aba + Busca
+  // Alterna a categoria: se clicar na mesma já ativa, limpa o filtro voltando para "all"
+  const handleCategoryClick = (categoryLabel: string) => {
+    setSelectedCategory((prev) =>
+      prev === categoryLabel ? "all" : categoryLabel,
+    )
+  }
+
+  // Lógica de Filtragem Integrada: Aba + Busca + Categoria
   const filteredTickets = tickets.filter((t) => {
     // 1. Filtro por Aba
     const matchTab =
@@ -72,7 +80,12 @@ export default function TicketsPage() {
       t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.location.toLowerCase().includes(searchQuery.toLowerCase())
 
-    return matchTab && matchSearch
+    // 3. Filtro por Categoria (Compara o label do ticket com o label da categoria)
+    const matchCategory =
+      selectedCategory === "all" ||
+      t.categoryLabel.toLowerCase() === selectedCategory.toLowerCase()
+
+    return matchTab && matchSearch && matchCategory
   })
 
   return (
@@ -82,11 +95,24 @@ export default function TicketsPage() {
       </div>
 
       <main className="w-[95%] max-w-[1200px] mt-8 px-4 md:px-0">
-        <div className="flex items-center gap-3 mb-8">
-          <TicketIcon className="text-[#0085D7] w-8 h-8 -rotate-45" />
-          <h1 className="text-3xl font-bold text-black font-serif">
-            Ingressos
-          </h1>
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <TicketIcon className="text-[#0085D7] w-8 h-8 -rotate-45" />
+            <h1 className="text-3xl font-bold text-black font-serif">
+              Ingressos
+            </h1>
+          </div>
+
+          {/* Indicador de filtro ativo para facilitar a usabilidade do usuário */}
+          {selectedCategory !== "all" && (
+            <button
+              onClick={() => setSelectedCategory("all")}
+              className="text-xs bg-white text-[#d62f98] font-bold px-4 py-1.5 rounded-full shadow-sm hover:bg-gray-50 border border-gray-200 transition-all"
+            >
+              Filtrado por:{" "}
+              <span className="underline">{selectedCategory}</span> ✕
+            </button>
+          )}
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
@@ -189,40 +215,23 @@ export default function TicketsPage() {
           ) : (
             <div className="bg-[#e8efff] rounded-3xl h-[400px] flex flex-col items-center justify-center gap-6 shadow-inner text-center px-4">
               <p className="text-gray-500 text-lg font-medium">
-                {searchQuery
-                  ? `Nenhum resultado para "${searchQuery}" em ${activeTab}`
+                {searchQuery || selectedCategory !== "all"
+                  ? `Nenhum resultado encontrado para os filtros aplicados em ${activeTab}`
                   : `Não há ingressos na categoria ${activeTab}`}
               </p>
-              <Link
-                href="/events"
-                className="bg-[#0085D7] text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-[#006bb3] transition transform hover:-translate-y-1"
+              <button
+                onClick={() => {
+                  setSearchQuery("")
+                  setSelectedCategory("all")
+                }}
+                className="bg-[#0085D7] text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-[#006bb3] transition transform hover:-translate-y-1 uppercase tracking-wider text-xs"
               >
-                ENCONTRAR EVENTOS
-              </Link>
+                Limpar Filtros
+              </button>
             </div>
           )}
         </div>
 
-        {/* --- RODAPÉ DE CATEGORIAS --- */}
-        <section className="mt-16 mb-10">
-          <h2 className="text-2xl font-bold text-[#eebb58] mb-8 border-b-2 border-[#eebb58] inline-block pb-1 font-serif">
-            Navegue por Categorias
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {categories.map((cat, index) => (
-              <Link
-                key={index}
-                href={`/events?category=${cat.slug}`}
-                className="bg-white rounded-xl p-4 flex flex-col items-center justify-center text-center gap-3 transition-transform hover:-translate-y-1 hover:shadow-md cursor-pointer group h-[120px]"
-              >
-                <cat.icon className="w-8 h-8 text-[#7b2cbf] group-hover:scale-110 transition-transform" />
-                <span className="text-gray-800 font-bold text-xs leading-tight">
-                  {cat.label}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
       </main>
     </div>
   )

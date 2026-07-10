@@ -20,7 +20,7 @@ interface EventData {
   description: string
   imageUrl?: string
   imageSrc?: string
-  location: string | LocationData 
+  location: string | LocationData
   dates?: EventDate[]
   date?: string
   attendeeLimit?: number
@@ -32,7 +32,6 @@ export default function FavoritesPage() {
   const [favoriteEvents, setFavoriteEvents] = useState<EventData[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
 
-  // Função de formatação interna ou importada
   const formatEventDate = (dateObj: EventDate): string => {
     if (!dateObj.startDate) return "Data a definir"
     const start = new Date(`${dateObj.startDate}T00:00:00`)
@@ -49,7 +48,6 @@ export default function FavoritesPage() {
   }
 
   useEffect(() => {
-    // Evita o erro de "setState" síncrono e garante que o localStorage só seja lido no Cliente
     const loadFavorites = () => {
       try {
         const storedEvents = JSON.parse(
@@ -64,7 +62,6 @@ export default function FavoritesPage() {
           storedFavIds.includes(event.id),
         )
 
-        // Remove duplicatas de forma eficiente
         const uniqueFavorites = filtered.filter(
           (event, index, self) =>
             index === self.findIndex((e) => e.id === event.id),
@@ -103,23 +100,24 @@ export default function FavoritesPage() {
   return (
     <div className="min-h-screen bg-[#dae4f8] pb-10 flex flex-col items-center">
       <Navbar />
-      <main className="w-[95%] max-w-[1200px] mt-8 px-4 md:px-0 bg-white/50 backdrop-blur-sm border border-white/60 rounded-[30px] p-6 md:p-10 shadow-xl relative overflow-hidden">
+      <main className="w-[95%] max-w-[1200px] mt-8 px-4 md:px-10 bg-white/50 backdrop-blur-sm border border-white/60 rounded-[30px] py-10 shadow-xl relative overflow-hidden">
         <div className="absolute inset-0 border-[3px] border-[#3B82F6] rounded-[30px] pointer-events-none"></div>
 
-        <div className="flex items-center gap-3 mb-8 relative z-10">
+        <div className="flex items-center gap-3 mb-8 relative z-10 px-2">
           <Ticket className="text-[#D32F2F] w-8 h-8 -rotate-12 fill-[#FFCDD2]" />
           <h1 className="text-3xl font-bold text-black font-serif">
             Eventos Favoritos
           </h1>
         </div>
 
-        <div className="flex flex-col gap-6 relative z-10">
+        <div className="flex flex-col gap-6 relative z-10 w-full px-2">
           {favoriteEvents.length > 0 ? (
             favoriteEvents.map((event) => (
               <div
                 key={event.id}
-                className="bg-white rounded-[25px] p-5 flex flex-col md:flex-row gap-6 items-center shadow-sm hover:shadow-md transition-all"
+                className="bg-white rounded-[20px] p-5 flex flex-col md:flex-row gap-6 items-center md:items-stretch justify-between shadow-sm hover:shadow-md transition-all w-full box-border"
               >
+                {/* Imagem do Evento */}
                 <div className="w-full md:w-[220px] h-[140px] flex-shrink-0 rounded-2xl overflow-hidden relative">
                   <img
                     src={
@@ -130,28 +128,30 @@ export default function FavoritesPage() {
                   />
                 </div>
 
-                <div className="flex-grow text-center md:text-left w-full">
-                  <h3 className="text-xl font-extrabold text-gray-900 mb-2 leading-tight">
+                {/* Textos Informativos */}
+                <div className="flex-grow text-center md:text-left w-full min-w-0 flex flex-col justify-center">
+                  <h3 className="text-xl font-extrabold text-gray-900 mb-2 leading-tight truncate">
                     {event.title}
                   </h3>
-                  <p className="text-xs text-gray-500 line-clamp-2">
+                  <p className="text-xs text-gray-500 line-clamp-3">
                     {event.description}
                   </p>
                 </div>
 
-                <div className="w-full md:w-[350px] flex-shrink-0 flex flex-col justify-between pl-0 md:pl-6 border-l-0 md:border-l border-gray-100 gap-3">
+                {/* Metadados e Ações Laterais - Ajustado para não estourar */}
+                <div className="w-full md:w-[260px] flex-shrink-0 flex flex-col justify-between pl-0 md:pl-6 border-l-0 md:border-l border-gray-100 gap-4">
                   <div className="flex flex-col gap-2 text-xs text-gray-600">
                     <div className="flex items-start gap-2">
-                      <MapPin className="w-4 h-4 text-[#7b2cbf]" />
-                      <span>
+                      <MapPin className="w-4 h-4 text-[#7b2cbf] flex-shrink-0 mt-0.5" />
+                      <span className="truncate">
                         {typeof event.location === "object"
                           ? event.location.city
                           : event.location}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-[#7b2cbf]" />
-                      <span>
+                    <div className="flex items-start gap-2">
+                      <Calendar className="w-4 h-4 text-[#7b2cbf] flex-shrink-0 mt-0.5" />
+                      <span className="line-clamp-2">
                         {event.dates
                           ? formatEventDate(event.dates[0])
                           : event.date}
@@ -159,7 +159,7 @@ export default function FavoritesPage() {
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center mt-2">
+                  <div className="flex justify-between items-center mt-auto pt-2">
                     <div className="bg-[#F3F0FA] px-3 py-1.5 rounded-lg flex items-center gap-2">
                       <Ticket className="w-4 h-4 text-[#7b2cbf]" />
                       <div className="flex flex-col leading-none">
@@ -171,7 +171,7 @@ export default function FavoritesPage() {
                               ).toLocaleString("pt-BR")
                             : event.tickets || 0}
                         </strong>
-                        <span className="text-[9px] text-gray-500 font-bold uppercase">
+                        <span className="text-[9px] text-gray-500 font-bold uppercase mt-0.5">
                           Restantes
                         </span>
                       </div>
@@ -179,7 +179,7 @@ export default function FavoritesPage() {
 
                     <button
                       onClick={() => removeFavorite(event.id)}
-                      className="w-10 h-10 rounded-full flex items-center justify-center transition-all bg-[#d62f98]/10 border-[#d62f98] text-[#d62f98] border shadow-sm hover:scale-110 active:scale-95"
+                      className="w-10 h-10 rounded-full flex items-center justify-center transition-all bg-[#d62f98]/10 border-[#d62f98] text-[#d62f98] border shadow-sm hover:scale-110 active:scale-95 flex-shrink-0"
                     >
                       <Heart className="w-6 h-6 fill-current" />
                     </button>
